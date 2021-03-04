@@ -4,7 +4,6 @@
 # rapid_analysis, such as bestEffortISR
 # it's required to run the latiss_align_and_take_sequence script
 # and the latiss_cwfs script
-
 # This script is optimized for the AuxTel run of 2021-03-09
 
 source ${LOADSTACK}
@@ -18,7 +17,7 @@ setup lsst_distrib
 REPOS=$HOME"/develop/"
 
 echo 'Repositories will cloned and setup in the directory:'$REPOS"\n"
-mkdir -k ${REPOS}
+mkdir -p ${REPOS}
 # Check if folders are already present before installing
 printf 'Setting up lsst-dm/Spectractor \n'
 if [ -d $REPOS"/Spectractor" ]
