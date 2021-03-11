@@ -83,7 +83,7 @@ git pull
 
 printf '\nSetting up bxin/cwfs \n'
 cd $REPOS
-git clone git@github.com:bxin/cwfs.git
+git clone https://github.com/bxin/cwfs.git
 cd cwfs
 git fetch --all
 setup -j -r .
@@ -91,7 +91,7 @@ scons
 
 printf '\nSetting up lsst-ts/ts_observatory_control \n'
 cd $REPOS
-git clone git@github.com:lsst-ts/ts_observatory_control.git
+git clone https://github.com/lsst-ts/ts_observatory_control.git
 cd ts_observatory_control
 git fetch --all
 git checkout tickets/DM-28995
@@ -102,7 +102,7 @@ setup -j -r .
 
 printf '\nSetting up lsst-ts/ts_externalscripts \n'
 cd $REPOS
-git clone git@github.com:lsst-ts/ts_externalscripts.git
+git clone https://github.com/lsst-ts/ts_externalscripts.git
 cd ts_externalscripts
 git fetch --all
 git checkout tickets/DM-29061
@@ -113,7 +113,7 @@ setup -j -r .
 
 printf '\nSetting up lsst-ts/ts_observing_utilities \n'
 cd $REPOS
-git clone git@github.com:lsst-ts/ts_observing_utilities.git
+git clone https://github.com/lsst-ts/ts_observing_utilities.git
 cd ts_observing_utilities
 git fetch --all
 git checkout develop
