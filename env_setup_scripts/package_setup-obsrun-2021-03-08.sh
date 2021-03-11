@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This script should be *sourced* from a Nublado terminal
+# This script should be executed (not sourced!) from a Nublado terminal
 # to clone and setup the packages needed to configure the
 # Nublado environment to use methods from
 # rapid_analysis, such as bestEffortISR
@@ -10,25 +10,25 @@
 source ${LOADSTACK}
 
 # Verify the proper jupyter build is being used
-if [ ${LSST_CONDA_ENV_NAME} == 'lsst-scipipe-0.4.1' ] then
+if [ ${LSST_CONDA_ENV_NAME} == 'lsst-scipipe-0.4.1' ]; then
   printf 'Nublado build is Correct\n'
 else
   printf 'Nublado build is incorrect. Exiting\n'
-  exit
+  exit 1
 fi
 
 # If running from Nublado instance than only use the following
 setup lsst_distrib
 
 ## Verify the proper lsst_distrib is loaded
-lsst_distrib_ver='w_2021_08'
+lsst_distrib_ver='w_2021_10'
 
 rval=$(eups list lsst_distrib)
 if [[ $rval == *"${lsst_distrib_ver}"* ]]; then
   printf 'Nublado weekly is correct\n'
 else
   printf 'Nublado weekly is incorrect. Exiting\n'
-  exit
+  exit 1
 fi
 
 # The packages will be cloned and installed in the following folder
@@ -38,8 +38,8 @@ REPOS=$HOME"/auto-op-env-packages/"
 # Check if the directory exists
 if [ -d $REPOS ]; then
   printf "Directory "$REPOS" exists. Remove directory and contents and re-run.\n"
-  exit
-
+  exit 1
+fi
 # Start cloning and setting up packages
 echo 'Repositories will cloned and setup in the directory:'$REPOS"\n"
 mkdir -k ${REPOS}
@@ -161,7 +161,7 @@ else
   printf "No writable .user_setups found in ${USER_SETUP_PATH} \n"
   printf "Are you sure you're running this on a Nublado instance? \n"
   printf "Make sure file exists then re-run this script \n"
-  exit
+  exit 1
 fi
 
 
