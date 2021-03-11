@@ -1,84 +1,173 @@
 #!/usr/bin/env bash
-# This script should be sourced to clone and setup the packages needed to
-# configure the Nublado environment to use methods from
+# This script should be *sourced* from a Nublado terminal
+# to clone and setup the packages needed to configure the
+# Nublado environment to use methods from
 # rapid_analysis, such as bestEffortISR
-# it's required to run the latiss_align_and_take_sequence script
-# and the latiss_cwfs script
-# This script is optimized for the AuxTel run of 2021-03-09
+# it's required to run the latiss_align_and_take_sequence
+# and the latiss_cwfs_align scripts
 
+# This script is ONLY to be used for the AuxTel run of 2021-03-09 through 12
 source ${LOADSTACK}
-# eups distrib install -t w_2021_10 lsst_distrib
+
+# Verify the proper jupyter build is being used
+if [ ${LSST_CONDA_ENV_NAME} == 'lsst-scipipe-0.4.1' ] then
+  printf 'Nublado build is Correct\n'
+else
+  printf 'Nublado build is incorrect. Exiting\n'
+  exit
+fi
 
 # If running from Nublado instance than only use the following
 setup lsst_distrib
 
-# Modify the following line to point to where you want to clone
-# and setup the repositories
-REPOS=$HOME"/develop/"
+## Verify the proper lsst_distrib is loaded
+lsst_distrib_ver='w_2021_08'
 
+rval=$(eups list lsst_distrib)
+if [[ $rval == *"${lsst_distrib_ver}"* ]]; then
+  printf 'Nublado weekly is correct\n'
+else
+  printf 'Nublado weekly is incorrect. Exiting\n'
+  exit
+fi
+
+# The packages will be cloned and installed in the following folder
+# It is strongly recommended NOT to modify this
+REPOS=$HOME"/auto-op-env-packages/"
+
+# Check if the directory exists
+if [ -d $REPOS ]; then
+  printf "Directory "$REPOS" exists. Remove directory and contents and re-run.\n"
+  exit
+
+# Start cloning and setting up packages
 echo 'Repositories will cloned and setup in the directory:'$REPOS"\n"
-mkdir -p ${REPOS}
+mkdir -k ${REPOS}
+
 # Check if folders are already present before installing
 printf 'Setting up lsst-dm/Spectractor \n'
-if [ -d $REPOS"/Spectractor" ]
-then
-    printf "Directory "$REPOS"/Spectractor exists. Skipping package install and leaving original.\n"
-else
-    cd $REPOS
-    git clone https://github.com/lsst-dm/Spectractor.git
-    cd Spectractor
-    git checkout tickets/DM-28773
-    git pull
-    pip install -r requirements.txt
-    pip install -e .
-fi
+cd $REPOS
+git clone https://github.com/lsst-dm/Spectractor.git
+cd Spectractor
+git checkout tickets/DM-28773
+git reset origin/tickets/DM-28773 --hard
+git pull
+pip install -r requirements.txt
+pip install -e .
 
 printf '\nSetting up lsst-dm/atmospec \n'
-if [ -d $REPOS"/atmospec" ]
-then
-    printf "Directory "$REPOS"/atmospec exists. Skipping package install and leaving original.\n"
-else
-    cd $REPOS
-    git clone https://github.com/lsst-dm/atmospec.git
-    cd atmospec
-    setup -j -r .
-    git fetch --all
-    git checkout tickets/DM-26719
-    scons opt=3 -j 4
-fi
+cd $REPOS
+git clone https://github.com/lsst-dm/atmospec.git
+cd atmospec
+setup -j -r .
+git fetch --all
+git checkout tickets/DM-26719
+git reset origin/tickets/DM-26719 --hard
+git pull
+scons opt=3 -j 4
 
 printf '\nSetting up lsst-sitcom/rapid_analysis \n'
-if [ -d $REPOS"/rapid_analysis" ]
-then
-    printf "Directory "$REPOS"/rapid_analysis exists. Skipping package install and leaving original.\n"
-else
-    cd $REPOS
-    git clone https://github.com/lsst-sitcom/rapid_analysis.git
-    cd rapid_analysis
-    setup -j -r .
-    scons opt=3 -j 4
-    git fetch --all
-    git checkout tickets/DM-21412
-fi
+cd $REPOS
+git clone https://github.com/lsst-sitcom/rapid_analysis.git
+cd rapid_analysis
+setup -j -r .
+scons opt=3 -j 4
+git fetch --all
+git checkout tickets/DM-21412
+git reset origin/tickets/DM-21412 --hard
+git pull
 
 printf '\nSetting up bxin/cwfs \n'
-if [ -d $REPOS"/cwfs" ]
-then
-    printf "Directory "$REPOS"/cwfs exists. Skipping package install and leaving original.\n"
-else
-    cd $REPOS
-    git clone git@github.com:bxin/cwfs.git
-    cd cwfs
-    git fetch --all
-    setup -j -r .
-    scons
+cd $REPOS
+git clone git@github.com:bxin/cwfs.git
+cd cwfs
+git fetch --all
+setup -j -r .
+scons
+
+printf '\nSetting up lsst-ts/ts_observatory_control \n'
+cd $REPOS
+git clone git@github.com:lsst-ts/ts_observatory_control.git
+cd ts_observatory_control
+git fetch --all
+git checkout tickets/DM-28995
+git reset origin/tickets/DM-28995 --hard
+git pull
+setup -j -r .
+#scons  # FIXME: Not necessary, yes?
+
+printf '\nSetting up lsst-ts/ts_externalscripts \n'
+cd $REPOS
+git clone git@github.com:lsst-ts/ts_externalscripts.git
+cd ts_externalscripts
+git fetch --all
+git checkout tickets/DM-29061
+git reset origin/tickets/DM-29061 --hard
+git pull
+setup -j -r .
+#scons  # FIXME: Not necessary, yes?
+
+printf '\nSetting up lsst-ts/ts_observing_utilities \n'
+cd $REPOS
+git clone git@github.com:lsst-ts/ts_observing_utilities.git
+cd ts_observing_utilities
+git fetch --all
+git checkout develop
+git reset origin/develop --hard
+git pull
+setup -j -r .
+#scons  # FIXME: Not necessary, yes?
+
+# Cloning completed
+
+# Create file that will be *sourced* at the beginning of .user_setups
+FILE_PATH=$REPOS"auto_env_setup.sh"
+if [ -d $FILE_PATH ]; then
+  printf "auto_env_setup.sh file already exists in "$REPOS". Removing. \n"
+  rm -f $FILE_PATH
 fi
 
-# Create screen output reminding people to update their .user_setups and refresh kernel
-printf "==== ATTENTION ====\n"
-printf "ADD THE FOLLOWING TO YOUR ~/notebooks/.user_setups file \n"
-printf "then be sure to restart every notebook kernel \n"
-printf ""
-printf "setup -j rapid_analysis -r "$REPOS"rapid_analysis \n"
-printf "setup -j atmospec -r "$REPOS"atmospec \n"
-printf "setup -j cwfs -r "$REPOS"cwfs \n"
+printf "Creating a new auto_env_setup.sh in: ${REPOS} \n"
+
+cat <<EOT >> $FILE_PATH
+#!/usr/bin/env bash
+# This file is auto generated by the package_setup_obsrun scripts.
+# It is sourced by the ~/notebooks/.user_setups file
+# Do not modify!
+EOT
+
+printf "setup -j rapid_analysis -r "$REPOS"rapid_analysis \n" >> $FILE_PATH
+printf "setup -j atmospec -r "$REPOS"atmospec \n" >> $FILE_PATH
+printf "setup -j cwfs -r "$REPOS"cwfs \n" >> $FILE_PATH
+
+
+#check that ~/notebooks/.user_setups exists
+USER_SETUP_PATH=$HOME"/notebooks/.user_setups"
+if [ -a $USER_SETUP_PATH ] && [ -w $USER_SETUP_PATH ]; then
+  # grab line3 of .user_setups for comparison
+  LINE3_OF_EXISTING_FILE=$(sed '3 p' $USER_SETUP_PATH)
+  # declare what we need it to say
+  LINE3="source ${FILE_PATH}"
+  # Check if content is already in .user_setups
+  # FIXME - WHY AREN'T THESE EXACT? WHITESPACE? Wildcards should not be necessary
+  if [[ $LINE3_OF_EXISTING_FILE != *"${LINE3}"* ]]; then
+    printf "Adding source command to auto_env_setup.sh at the top of your ~/notebooks/.user_setups file \n"
+    sed -i "1i$LINE3 \n" $USER_SETUP_PATH
+    sed -i "1i# The first three lines of this file are added automatically by package_setup_obsrun script in $REPOS \n# DO NOT MODIFY OR MOVE" $USER_SETUP_PATH
+  else
+    printf "Source command already at the top of your ~/notebooks/.user_setups file. Skipping.\n"
+  fi
+else
+  printf "No writable .user_setups found in ${USER_SETUP_PATH} \n"
+  printf "Are you sure you're running this on a Nublado instance? \n"
+  printf "Make sure file exists then re-run this script \n"
+  exit
+fi
+
+
+printf "\nPackage setup script completed successfully\n"
+printf "####################################################################################\n"
+printf "WARNING: RESTART ALL NOTEBOOK KERNELS \n"
+printf "WARNING: Verify no packages are being overwritten (setup) in your .user_setups file. \n"
+printf "WARNING: Verify your ospl daemon is running. \n"
+printf "#################################################################################### \n"
