@@ -6,14 +6,18 @@
 # it's required to run the latiss_align_and_take_sequence
 # and the latiss_cwfs_align scripts
 
+# set to exit when any command fails
+set -e
+
 # This script is ONLY to be used for the AuxTel run of 2021-03-09 through 12
 source ${LOADSTACK}
 
 # Verify the proper jupyter build is being used
-if [ ${LSST_CONDA_ENV_NAME} == 'lsst-scipipe-0.4.1' ]; then
-  printf 'Nublado build is Correct\n'
+REQUIRED_BUILD='lsst-scipipe-0.4.1'
+if [ ${LSST_CONDA_ENV_NAME} == ${REQUIRED_BUILD} ]; then
+  printf "Nublado build is Correct\n"
 else
-  printf 'Nublado build is incorrect. Exiting\n'
+  printf "Nublado build is incorrect. You have ${LSST_CONDA_ENV_NAME} but need ${REQUIRED_BUILD}. Exiting\n"
   exit 1
 fi
 
@@ -21,13 +25,13 @@ fi
 setup lsst_distrib
 
 ## Verify the proper lsst_distrib is loaded
-lsst_distrib_ver='w_2021_10'
+LSST_DISTRIB_VER='w_2021_10'
 
-rval=$(eups list lsst_distrib)
-if [[ $rval == *"${lsst_distrib_ver}"* ]]; then
-  printf 'Nublado weekly is correct\n'
+RVAL=$(eups list lsst_distrib)
+if [[ $RVAL == *"${LSST_DISTRIB_VER}"* ]]; then
+  printf "Nublado weekly is correct\n"
 else
-  printf 'Nublado weekly is incorrect. Exiting\n'
+  printf "Nublado weekly is incorrect. You have ${RVAL} but need ${LSST_DISTRIB_VER}. Exiting\n"
   exit 1
 fi
 
@@ -42,7 +46,7 @@ if [ -d $REPOS ]; then
 fi
 # Start cloning and setting up packages
 echo 'Repositories will cloned and setup in the directory:'$REPOS"\n"
-mkdir -k ${REPOS}
+mkdir -v ${REPOS}
 
 # Check if folders are already present before installing
 printf 'Setting up lsst-dm/Spectractor \n'
@@ -121,6 +125,7 @@ setup -j -r .
 # Cloning completed
 
 # Create file that will be *sourced* at the beginning of .user_setups
+# This file contains all the packages that require an eups setup
 FILE_PATH=$REPOS"auto_env_setup.sh"
 if [ -d $FILE_PATH ]; then
   printf "auto_env_setup.sh file already exists in "$REPOS". Removing. \n"
@@ -138,6 +143,9 @@ EOT
 
 printf "setup -j rapid_analysis -r "$REPOS"rapid_analysis \n" >> $FILE_PATH
 printf "setup -j atmospec -r "$REPOS"atmospec \n" >> $FILE_PATH
+printf "setup -j ts_externalscripts -r "$REPOS"ts_externalscripts \n" >> $FILE_PATH
+printf "setup -j ts_observatory_control -r "$REPOS"ts_observatory_control \n" >> $FILE_PATH
+printf "setup -j ts_observing_utilities -r "$REPOS"ts_observing_utilities \n" >> $FILE_PATH
 printf "setup -j cwfs -r "$REPOS"cwfs \n" >> $FILE_PATH
 
 
